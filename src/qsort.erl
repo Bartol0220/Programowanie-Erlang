@@ -20,6 +20,7 @@ random_elems(N, Min, Max) ->
 compare_speeds(List, Fun1, Fun2) ->
     {TimeFun1, _} = timer:tc(Fun1, [List]),
     {TimeFun2, _} = timer:tc(Fun2, [List]),
-    io:format("~w ~n", [TimeFun1]),
-    io:format("~w ~n", [TimeFun2]).
+    io:format("Fun1: ~w ~n", [TimeFun1]),
+    io:format("Fun2: ~w ~n", [TimeFun2]).
+    % wywołaeni: qsort:compare_speeds(A, fun qsort:qs/1, fun lists:sort/1).
 
