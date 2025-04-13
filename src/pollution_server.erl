@@ -16,12 +16,28 @@ init() ->
     M = pollution:create_monitor(),
     register(pollution_serv, spawn(?MODULE, serv_loop, [M])).
 
+
+
+serv_loop({error, _}, Old_monitor) ->
+    serv_loop(Old_monitor);
+serv_loop(New_monitor, _) ->
+    serv_loop(New_monitor).
+
 serv_loop(M) ->
     receive
         pause -> ok;
-        {new_monitor, NM} -> serv_loop(NM);
-        {get_monitor, Pid} -> Pid ! M, serv_loop(M)
+        {get_monitor, Pid} -> Pid ! M, serv_loop(M);
+        {add_station, Pid, Name, Coordinates} -> NM = pollution:add_station(Name, Coordinates, M), Pid ! NM, serv_loop(NM, M);
+        {add_value, Pid, Station, Datet, Type, Value} -> NM = pollution:add_value(Station, Datet, Type, Value, M), Pid ! NM, serv_loop(NM, M);
+        {remove_value, Pid, Station, Datet, Type} -> NM = pollution:remove_value(Station, Datet, Type, M), Pid ! NM, serv_loop(NM, M);
+        {get_one_value, Pid, Station, Datet, Type} -> Res = pollution:get_one_value(Station, Datet, Type, M), Pid ! Res, serv_loop(M);
+        {get_station_min, Pid, Station, Type} -> Res = pollution:get_station_min(Station, Type, M), Pid ! Res, serv_loop(M);
+        {get_daily_mean, Pid, Type, Date} -> Res = pollution:get_daily_mean(Type, Date, M), Pid ! Res, serv_loop(M);
+        {get_closest_stations, Pid, Station} -> Res = pollution:get_closest_stations(Station, M), Pid ! Res, serv_loop(M);
+        _ -> serv_loop(M)
     end.
+
+
 
 get_monitor() ->
     pollution_serv ! {get_monitor, self()},
@@ -32,50 +48,43 @@ get_monitor() ->
 
 
 add_station(Name, Coordinates) ->
-    R = pollution:add_station(Name, Coordinates, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}, R
+    pollution_serv ! {add_station, self(), Name, Coordinates},
+    receive
+        R -> R
     end.
 
 add_value(Station, Datet, Type, Value) ->
-    R = pollution:add_value(Station, Datet, Type, Value, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
+    pollution_serv ! {add_value, self(), Station, Datet, Type, Value},
+    receive
+        R -> R
     end.
 
 remove_value(Station, Datet, Type) ->
-    R = pollution:remove_value(Station, Datet, Type, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
+    pollution_serv ! {remove_value, self(), Station, Datet, Type},
+    receive
+        R -> R
     end.
 
 get_one_value(Station, Datet, Type) ->
-    R = pollution:get_one_value(Station, Datet, Type, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
+    pollution_serv ! {get_one_value, self(), Station, Datet, Type},
+    receive
+        R -> R
     end.
 
 get_station_min(Station, Type) ->
-    R = pollution:get_station_min(Station, Type, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
+    pollution_serv ! {get_station_min, self(), Station, Type},
+    receive
+        R -> R
     end.
 
 get_daily_mean(Type, Date) ->
-    R = pollution:get_daily_mean(Type, Date, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
+    pollution_serv ! {get_daily_mean, self(), Type, Date},
+    receive
+        R -> R
     end.
 
 get_closest_stations(Station) ->
-    R = pollution:get_closest_stations(Station, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
+    pollution_serv ! {get_closest_stations, self(), Station},
+    receive
+        R -> R
     end.
