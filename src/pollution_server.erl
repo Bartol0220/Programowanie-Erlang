@@ -7,14 +7,14 @@
 
 
 start() ->
-    spawn(?MODULE, init, []).
+    register(pollution_serv, spawn(?MODULE, init, [])).
 
 stop() ->
     pollution_serv ! pause.
 
 init() ->
     M = pollution:create_monitor(),
-    register(pollution_serv, spawn(?MODULE, serv_loop, [M])).
+    serv_loop(M).
 
 
 
