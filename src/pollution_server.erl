@@ -16,6 +16,8 @@ init() ->
     M = pollution:create_monitor(),
     register(pollution_serv, spawn(?MODULE, serv_loop, [M])).
 
+
+
 serv_loop(M) ->
     receive
         pause -> ok;
@@ -53,29 +55,13 @@ remove_value(Station, Datet, Type) ->
     end.
 
 get_one_value(Station, Datet, Type) ->
-    R = pollution:get_one_value(Station, Datet, Type, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
-    end.
+    pollution:get_one_value(Station, Datet, Type, get_monitor()).
 
 get_station_min(Station, Type) ->
-    R = pollution:get_station_min(Station, Type, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
-    end.
+    pollution:get_station_min(Station, Type, get_monitor()).
 
 get_daily_mean(Type, Date) ->
-    R = pollution:get_daily_mean(Type, Date, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
-    end.
+    pollution:get_daily_mean(Type, Date, get_monitor()).
 
 get_closest_stations(Station) ->
-    R = pollution:get_closest_stations(Station, get_monitor()),
-    case R of
-        {error, _} -> R;
-        _ -> pollution_serv ! {new_monitor, R}
-    end.
+    pollution:get_closest_stations(Station, get_monitor()).
