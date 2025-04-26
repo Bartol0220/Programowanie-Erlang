@@ -19,18 +19,20 @@ find_closests(PeopleLocations, SensorLocations) ->
     lists:min( [find_for_person(PL, SensorLocations) || PL <- PeopleLocations] ).
 
 measure() ->
-%%    PeopleLocations = get_rand_locations(20000),
-%%    SensorLocations = get_rand_locations(1000),
-    PeopleLocations = get_rand_locations(200),
-    SensorLocations = get_rand_locations(10),
-    {_, _} = timer:tc(fun find_closests/2, [PeopleLocations, SensorLocations]),
-%%    R1.
-    find_closests_r(PeopleLocations, SensorLocations).
+    PeopleLocations = get_rand_locations(50000),
+    SensorLocations = get_rand_locations(2000),
+    io:format("Poszukiwanie~n"),
+    {T1, R1} = timer:tc(fun find_closests/2, [PeopleLocations, SensorLocations]),
+    io:format("Poszukiwanie równoległe~n"),
+    {T2, R2} = timer:tc(fun find_closests_r/2, [PeopleLocations, SensorLocations]),
+    io:format("~w - czas poszukiwania~n", [T1]),
+    io:format("~w - czas poszukiwania równoległego~n", [T2]),
+    R1 == R2.
 
 find_for_person(PersonLocation, SensorLocation, PPID) ->
     PPID ! lists:min( [{dist(PersonLocation, SL), {PersonLocation, SL}} || SL <- SensorLocation] ).
 
 find_closests_r(PeopleLocations, SensorLocations) ->
-    PIDs = [spawn(?MODULE, find_for_person/3, [PL, SensorLocations, self()]) || PL <- PeopleLocations],
+    PIDs = [spawn(?MODULE, find_for_person, [PL, SensorLocations, self()]) || PL <- PeopleLocations],
     lists:min([receive N -> N end || _ <- PIDs]).
 
