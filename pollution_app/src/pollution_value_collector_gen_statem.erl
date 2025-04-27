@@ -8,6 +8,8 @@
 
 -record(data, {station, values = []}).
 
+
+
 init(_) ->
     {ok, waiting_station, #data{station = "", values = []}}.
 
@@ -17,9 +19,13 @@ start_link() ->
 callback_mode() ->
     state_functions.
 
-set_station(Name, Coordinates) -> gen_statem:cast(pollution_value_collector_gen_statem, {station, Name, Coordinates}).
+
+
+set_station(Name, {C1, C2}) -> gen_statem:cast(pollution_value_collector_gen_statem, {station, Name, {C1, C2}}).
 add_value(Type, Value) -> gen_statem:cast(pollution_value_collector_gen_statem, {value, Type, Value}).
 store_data() -> gen_statem:cast(pollution_value_collector_gen_statem, data).
+
+
 
 waiting_station(_, {station, Name, Coordinates}, State) ->
     NewState = State#data{station = {Name, Coordinates}},
@@ -40,4 +46,5 @@ waiting_store_data(_, data, State) ->
     Values = State#data.values,
     pollution_gen_server:add_station(Name, Coordinates),
     [pollution_gen_server:add_value(Name, Datet, Type, Value) || {Type, Value, Datet} <- Values],
-    {next_state, waiting_store_data, #data{station = "", values = []}}.
+    NewState = #data{station = "", values = []},
+    {next_state, waiting_station, NewState}.
