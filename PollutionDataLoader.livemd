@@ -1,0 +1,104 @@
+# Untitled notebook
+
+## Section
+
+```elixir
+defmodule PollutionApp do
+  def run_app_pc() do
+    Code.append_path("D:\\nauka\\Programowanie-Erlang\\pollution_app\\_build\\default\\lib\\pollution_app\\ebin")
+    Application.start(:pollution_app)
+  end
+
+  def run_app_laptop() do
+    Code.append_path("C:\\Users\\Admin\\studia\\Programowanie-Erlang\\pollution_app\\_build\\default\\lib\\pollution_app\\ebin")
+    Application.start(:pollution_app)
+  end
+
+  def stop_app do
+    Application.stop(:pollution_app)
+  end
+end
+```
+
+```elixir
+PollutionApp.stop_app()
+
+PollutionApp.run_app_pc()
+# PollutionApp.run_app_laptop()
+```
+
+```elixir
+defmodule PollutionDataLoader do  
+  def parsline(line) do
+    [datetime_str, type, val_str, id, name, cords] = String.split(line, ";")
+    
+    [date, time] = datetime_str |> String.split("T")
+    time = time |> String.slice(0, 8)
+
+    date = date
+      |> String.split("-")
+      |> Enum.map(&String.to_integer/1)
+      |> List.to_tuple()
+
+    time = time
+      |> String.split(":")
+      |> Enum.map(&String.to_integer/1)
+      |> List.to_tuple()
+    
+    val = val_str |> String.to_float()
+
+    cords = cords
+      |> String.split(",")
+      |> Enum.map(&String.to_float/1)
+      |> List.to_tuple()
+
+    %{id: String.to_integer(id), value: val, type: type, datet: {date, time}, name: name, cords: cords}
+  end
+
+  def load_data_from_file(path) do
+    File.read!(path)
+    |> String.trim()
+    |> String.split("\n")
+    |> Enum.map(&PollutionDataLoader.parsline/1)
+  end
+
+  def add_all_stations(map) do
+    map
+    |> Enum.uniq_by(& &1.id)
+    |> Enum.map(fn x -> :pollution_gen_server.add_station(x.name <> " " <> Integer.to_string(x.id), x.cords) end)
+  end
+
+  def add_all_values(map) do
+    map
+    |> Enum.map(fn x -> :pollution_gen_server.add_value(x.name <> " " <> Integer.to_string(x.id), x.datet, x.type, x.value) end)
+  end
+
+  def load_all_data(path) do
+    map = PollutionDataLoader.load_data_from_file(path)
+
+    PollutionDataLoader.add_all_stations(map)
+    PollutionDataLoader.add_all_values(map)
+    :ok
+  end
+
+  
+
+  def load_data_pc() do
+    PollutionDataLoader.load_all_data("D:\\nauka\\Programowanie-Erlang\\data\\AirlyData-ALL-50k.csv")
+  end
+
+  def load_data_laptop() do
+    PollutionDataLoader.load_all_data("C:\\Users\\Admin\\studia\\Programowanie-Erlang\\data\\AirlyData-ALL-50k.csv")
+  end
+end
+```
+
+```elixir
+PollutionDataLoader.load_data_pc()
+
+# PollutionDataLoader.load_data_laptop()
+```
+
+```elixir
+:pollution_gen_server.get_monitor()
+```

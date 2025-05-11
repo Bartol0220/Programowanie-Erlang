@@ -32,8 +32,11 @@ defmodule Pars do
     %{id: String.to_integer(id), value: val, type: type, datet: {date, time}, name: name, cords: cords}
   end
 end
+```
 
-map = File.read!("C:\\Users\\Admin\\studia\\Programowanie-Erlang\\data\\AirlyData-ALL-50k.csv")
+```elixir
+map = File.read!("D:\\nauka\\Programowanie-Erlang\\data\\AirlyData-ALL-50k.csv")
+# map = File.read!("C:\\Users\\Admin\\studia\\Programowanie-Erlang\\data\\AirlyData-ALL-50k.csv")
 |> String.trim()
 |> String.split("\n")
 |> Enum.map(&Pars.parsline/1)
@@ -42,15 +45,21 @@ map_uniq = map |> Enum.uniq_by(& &1.id)
 ```
 
 ```elixir
-Code.append_path("C:\\Users\\Admin\\studia\\Programowanie-Erlang\\pollution_app\\_build\\default\\lib\\pollution_app\\ebin")
+Code.append_path("D:\\nauka\\Programowanie-Erlang\\pollution_app\\_build\\default\\lib\\pollution_app\\ebin")
+# Code.append_path("C:\\Users\\Admin\\studia\\Programowanie-Erlang\\pollution_app\\_build\\default\\lib\\pollution_app\\ebin")
 
+
+# Application.stop(:pollution_app)
 Application.start(:pollution_app)
 ```
 
 ```elixir
+fn -> 
 map_uniq
-|> Enum.map(fn x -> :pollution_gen_server.add_station(x.name, x.cords) end)
-
+|> Enum.map(fn x -> :pollution_gen_server.add_station(x.name <> " " <> Integer.to_string(x.id), x.cords) end)
+end
+|> :timer.tc
+|> elem(0)
 ```
 
 ```elixir
@@ -58,12 +67,20 @@ map_uniq
 ```
 
 ```elixir
+fn -> 
 map
-|> Enum.map(fn x -> :pollution_gen_server.add_value(x.name, x.datet, x.type, x.value) end)
+|> Enum.map(fn x -> :pollution_gen_server.add_value(x.name <> " " <> Integer.to_string(x.id), x.datet, x.type, x.value) end)
+end
+|> :timer.tc
+|> elem(0)
 ```
 
 ```elixir
 :pollution_gen_server.get_monitor()
+```
+
+```elixir
+:pollution_gen_server.get_closest_stations("Polska, Kraków, Kielecka 9919")
 ```
 
 ```elixir
@@ -71,25 +88,17 @@ map
 ```
 
 ```elixir
-:pollution_gen_server.get_daily_mean("PM1", {2024, 2, 11})
+:pollution_gen_server.get_closest_stations("Polska, Kraków, Kielecka 9919")
 ```
 
 ```elixir
-:pollution_gen_server.get_daily_mean("PM1", {2024, 2, 13})
+:pollution_gen_server.get_closest_stations("Polska, Kraków, Generała Józefa Bema 11239")
 ```
 
 ```elixir
-:pollution_gen_server.get_closest_stations("Polska, Kraków, Kielecka")
+fn -> :pollution_gen_server.get_station_min("Polska, Kraków, Studencka 9910", "PM10") end |> :timer.tc
 ```
 
 ```elixir
-:pollution_gen_server.get_closest_stations("Polska, Kraków, Generała Józefa Bema")
-```
-
-```elixir
-:pollution_gen_server.get_station_min("Polska, Kraków, Studencka", "PM10")
-```
-
-```elixir
-:pollution_gen_server.get_daily_mean("PM25", {2024, 2, 10})
+fn -> :pollution_gen_server.get_daily_mean("PM25", {2024, 2, 10}) end |> :timer.tc
 ```
