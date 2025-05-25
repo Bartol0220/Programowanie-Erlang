@@ -7,5 +7,8 @@ defmodule Pollutiondb.Repo.Migrations.CreateStations do
       add :lon, :float
       add :lat, :float
     end
+
+    create unique_index(:stations, [:name])
+    create unique_index(:stations, [:lon, :lat])
   end
 end

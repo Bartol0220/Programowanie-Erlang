@@ -6,6 +6,7 @@ defmodule Pollutiondb.Station do
         field :name, :string
         field :lon, :float
         field :lat, :float
+        has_many :readings, Pollutiondb.Reading
     end
 
     def add(station) do
@@ -21,8 +22,13 @@ defmodule Pollutiondb.Station do
         Pollutiondb.Repo.all(Pollutiondb.Station)
     end
 
+    def count_records() do
+        Pollutiondb.Repo.aggregate(Pollutiondb.Station, :count, :id)
+    end
+
     def get_by_id(id) do
         Pollutiondb.Repo.get(Pollutiondb.Station, id)
+        |> Pollutiondb.Repo.preload(:readings)
     end
 
     def remove(station) do
@@ -54,20 +60,39 @@ defmodule Pollutiondb.Station do
         |> Pollutiondb.Repo.all
     end
 
-    def changeset(station, changesmap) do
-
+    defp changeset(station, changesmap) do
+        station
+        |> Ecto.Changeset.cast(changesmap, [:name, :lon, :lat])
+        |> Ecto.Changeset.validate_required([:name, :lon, :lat])
+        |> Ecto.Changeset.validate_number(:lon, greater_than_or_equal_to: -180, less_than_or_equal_to: 180)
+        |> Ecto.Changeset.validate_number(:lat, greater_than_or_equal_to: -90, less_than_or_equal_to: 90)
+        |> Ecto.Changeset.unique_constraint(:name)
+        |> Ecto.Changeset.unique_constraint([:lon, :lat], name: :stations_lon_lat_index)
     end
 
+#    def update_name(station, newname) do
+#        Ecto.Changeset.cast(station, %{name: newname}, [:name])
+#        |> Ecto.Changeset.validate_required([:name])
+#        |> Pollutiondb.Repo.update
+#    end
+
     def update_name(station, newname) do
-        Ecto.Changeset.cast(station, %{name: newname}, [:name])
-        |> Ecto.Changeset.validate_required([:name])
+        changeset(station, %{name: newname})
         |> Pollutiondb.Repo.update
     end
 
+#    def add(name, lon, lat) do
+#        %Pollutiondb.Station{}
+#        |> Ecto.Changeset.cast(%{name: name, lon: lon, lat: lat}, [:name, :lon, :lat])
+#        |> Ecto.Changeset.validate_required([:name, :lon, :lat])
+#        |> Ecto.Changeset.validate_number(:lon, greater_than_or_equal_to: -180, less_than_or_equal_to: 180)
+#        |> Ecto.Changeset.validate_number(:lat, greater_than_or_equal_to: -90, less_than_or_equal_to: 90)
+#        |> Pollutiondb.Repo.insert
+#    end
+
     def add(name, lon, lat) do
-        Ecto.Changeset.cast(%{}, %{name: name, lon: lon, lat: lat}, [:name, :lot, :lat])
-        |> Ecto.Changeset.validate_required([:name, :lot, :lat])
-        |> Ecto.Changeset.-validate_number()
+        %Pollutiondb.Station{}
+        |> changeset(%{name: name, lon: lon, lat: lat})
         |> Pollutiondb.Repo.insert
     end
 end
