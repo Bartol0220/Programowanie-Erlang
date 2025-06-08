@@ -1,2 +1,3 @@
-# Programowanie-Erlang
-Pierwsza część laboratoriów z przedmiotu Programowanie w językach Erlang i Elixir
+# Programowanie w językach Erlang i Elixir
+
+Projekt Phoenix [`lab7`](phoenix_lab/pollutiondb/)
